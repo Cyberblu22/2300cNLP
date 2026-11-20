@@ -211,7 +211,9 @@ def tokenize(text: str) -> list[str]:
     text = text.lower()
     for phrase, token in PHRASES.items():
         text = text.replace(phrase, token)
-    # Keep letters, digits, underscores and "+" (for c++ before replacement).
+    # Tokens are runs of letters, digits and underscores that start with a
+    # letter. "+" is dropped here, which is why "c++" is replaced with "cpp"
+    # above, before this step.
     return re.findall(r"[a-z][a-z0-9_]*", text)
 
 
@@ -252,7 +254,7 @@ def generated_sentences(rng: random.Random, per_template: int = 60) -> list[list
     return sents
 
 
-def build() -> list[list[str]]:
+def build() -> tuple[list[list[str]], int, int]:
     rng = random.Random(SEED)
     course = course_sentences()
     generated = generated_sentences(rng)

@@ -126,7 +126,7 @@ def place_labels(ax, xs, ys, words, fontsize):
              for x, y, w in zip(xs, ys, words)]
     adjust_text(texts, x=list(xs), y=list(ys), ax=ax,
                 expand=(1.35, 1.8), force_text=(0.3, 0.6), force_static=(0.4, 0.8),
-                force_pull=(0.004, 0.004), max_move=(15, 15), time_lim=4,
+                force_pull=(0.004, 0.004), max_move=(15, 15), iter_lim=150,
                 arrowprops=LEADER)
     return texts
 
