@@ -11,7 +11,7 @@ Outputs (in outputs/):
     pca_2d.png               2D PCA projection of the topic words
     tsne_2d.png              2D t-SNE projection (keeps local neighborhoods)
     pca_3d.png               3D PCA projection (static image)
-    embedding_3d.html        interactive 3D PCA plot (rotate / zoom / hover)
+    embedding_3d.html        interactive 3D PCA plot (rotate / zoom / hover; plotly.js bundled, works offline)
     similarity_heatmap.png   cosine similarity between selected words
     results.json             training settings, nearest neighbors, analogies,
                              cluster quality numbers
@@ -219,7 +219,7 @@ def scatter_3d_html(points, words, labels, explained, path):
         paper_bgcolor="white", margin=dict(l=0, r=0, t=60, b=0),
         font=dict(family="Inter, system-ui, sans-serif"),
     )
-    fig.write_html(path, include_plotlyjs="cdn", full_html=True)
+    fig.write_html(path, include_plotlyjs=True, full_html=True)
 
 
 def heatmap(wv, path):

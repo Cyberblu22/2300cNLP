@@ -97,6 +97,7 @@ model.wv.most_similar("debug")
 ## Limitations
 
 - The corpus is small, and most of it is template-generated, so the model learns the topic groups well but finer relations only weakly (see the third analogy).
+- Small tokenizer quirk: plural phrases such as "mutable defaults" become their own token (`mutable_defaults`) instead of joining `mutable_default`, and identifiers like `add_item` in the course text are split into separate words. Fixing this moves the results by about 0.01, so it was left as-is.
 - PCA keeps only part of the variance in 2 or 3 dimensions (the axis labels on each graph give the percentages). t-SNE keeps neighbors together, but the distances between clusters don't mean anything.
 
 *Linewise is a concept created for a class exercise.*
