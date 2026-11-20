@@ -125,8 +125,9 @@ def place_labels(ax, xs, ys, words, fontsize):
                      zorder=5, path_effects=HALO)
              for x, y, w in zip(xs, ys, words)]
     adjust_text(texts, x=list(xs), y=list(ys), ax=ax,
-                expand=(1.15, 1.35), force_text=(0.3, 0.5), force_static=(0.2, 0.4),
-                force_pull=(0.005, 0.005), time_lim=10, arrowprops=LEADER)
+                expand=(1.35, 1.8), force_text=(0.3, 0.6), force_static=(0.4, 0.8),
+                force_pull=(0.004, 0.004), max_move=(15, 15), time_lim=4,
+                arrowprops=LEADER)
     return texts
 
 
