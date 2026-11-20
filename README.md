@@ -1,6 +1,10 @@
 # 2300cNLP
 This is for my Intro for NLP course in coolege
 
+## Word2Vec model
+
+A trained Word2Vec model on the project's subject (reading and debugging AI-generated code), with 2D and 3D graphs of how the words relate. See [`word2vec/`](word2vec/README.md): a results page, a notebook walkthrough, the training scripts and the saved model. On the deployed site it's at `/word2vec/`.
+
 ## Linewise landing page
 
 A landing page for **Linewise**, a made-up product from a class exercise: free daily practice reading, reviewing and debugging flawed AI-generated code. It's built from the Part 4 landing page PRD and the Part 3 brand and design system in the course prompt chain.

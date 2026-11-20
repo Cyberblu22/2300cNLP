@@ -1,0 +1,414 @@
+{
+  "parameters": {
+    "vector_size": 100,
+    "window": 5,
+    "min_count": 3,
+    "sg": 1,
+    "negative": 10,
+    "epochs": 40,
+    "seed": 42
+  },
+  "corpus": {
+    "course_sentences": 618,
+    "generated_sentences": 5040,
+    "total_sentences": 6894,
+    "total_tokens": 61623,
+    "vocabulary_size": 1943
+  },
+  "topic_words_plotted": 81,
+  "pca_explained_variance": {
+    "2d": [
+      0.128,
+      0.092
+    ],
+    "3d": [
+      0.128,
+      0.092,
+      0.087
+    ]
+  },
+  "nearest_neighbors": {
+    "off_by_one": [
+      [
+        "race_condition",
+        0.758
+      ],
+      [
+        "deadlock",
+        0.754
+      ],
+      [
+        "null_pointer",
+        0.75
+      ],
+      [
+        "mutable_default",
+        0.746
+      ],
+      [
+        "infinite_loop",
+        0.744
+      ],
+      [
+        "normalization",
+        0.721
+      ]
+    ],
+    "mutable_default": [
+      [
+        "race_condition",
+        0.842
+      ],
+      [
+        "memory_leak",
+        0.838
+      ],
+      [
+        "infinite_loop",
+        0.82
+      ],
+      [
+        "normalization",
+        0.804
+      ],
+      [
+        "type_error",
+        0.801
+      ],
+      [
+        "null_pointer",
+        0.798
+      ]
+    ],
+    "race_condition": [
+      [
+        "deadlock",
+        0.907
+      ],
+      [
+        "null_pointer",
+        0.897
+      ],
+      [
+        "memory_leak",
+        0.878
+      ],
+      [
+        "type_error",
+        0.87
+      ],
+      [
+        "infinite_loop",
+        0.865
+      ],
+      [
+        "overflow",
+        0.856
+      ]
+    ],
+    "python": [
+      [
+        "rust",
+        0.766
+      ],
+      [
+        "javascript",
+        0.764
+      ],
+      [
+        "cpp",
+        0.755
+      ],
+      [
+        "java",
+        0.755
+      ],
+      [
+        "typescript",
+        0.73
+      ],
+      [
+        "clickable",
+        0.58
+      ]
+    ],
+    "copilot": [
+      [
+        "autocomplete",
+        0.938
+      ],
+      [
+        "llm",
+        0.908
+      ],
+      [
+        "hallucinated",
+        0.866
+      ],
+      [
+        "chatbot",
+        0.836
+      ],
+      [
+        "prompt",
+        0.818
+      ],
+      [
+        "assistant",
+        0.812
+      ]
+    ],
+    "debug": [
+      [
+        "inspect",
+        0.791
+      ],
+      [
+        "review",
+        0.772
+      ],
+      [
+        "verify",
+        0.747
+      ],
+      [
+        "trace",
+        0.735
+      ],
+      [
+        "flag",
+        0.734
+      ],
+      [
+        "spot",
+        0.724
+      ]
+    ],
+    "anxiety": [
+      [
+        "doubt",
+        0.909
+      ],
+      [
+        "panic",
+        0.877
+      ],
+      [
+        "stress",
+        0.872
+      ],
+      [
+        "fear",
+        0.859
+      ],
+      [
+        "shame",
+        0.855
+      ],
+      [
+        "overwhelm",
+        0.825
+      ]
+    ],
+    "confidence": [
+      [
+        "relief",
+        0.83
+      ],
+      [
+        "pride",
+        0.814
+      ],
+      [
+        "calm",
+        0.806
+      ],
+      [
+        "joy",
+        0.802
+      ],
+      [
+        "earned",
+        0.677
+      ],
+      [
+        "clarity",
+        0.661
+      ]
+    ],
+    "interview": [
+      [
+        "internship",
+        0.68
+      ],
+      [
+        "resume",
+        0.648
+      ],
+      [
+        "recruiter",
+        0.637
+      ],
+      [
+        "summer",
+        0.586
+      ],
+      [
+        "career",
+        0.581
+      ],
+      [
+        "hiring",
+        0.576
+      ]
+    ],
+    "streak": [
+      [
+        "hint",
+        0.633
+      ],
+      [
+        "progress",
+        0.605
+      ],
+      [
+        "feedback",
+        0.601
+      ],
+      [
+        "lesson",
+        0.599
+      ],
+      [
+        "calendar",
+        0.597
+      ],
+      [
+        "bars",
+        0.581
+      ]
+    ]
+  },
+  "analogies": [
+    {
+      "a": "shame",
+      "b": "pride",
+      "c": "anxiety",
+      "answers": [
+        [
+          "joy",
+          0.826
+        ],
+        [
+          "relief",
+          0.814
+        ],
+        [
+          "calm",
+          0.764
+        ]
+      ]
+    },
+    {
+      "a": "python",
+      "b": "javascript",
+      "c": "java",
+      "answers": [
+        [
+          "cpp",
+          0.784
+        ],
+        [
+          "typescript",
+          0.754
+        ],
+        [
+          "rust",
+          0.746
+        ]
+      ]
+    },
+    {
+      "a": "deadlock",
+      "b": "thread",
+      "c": "off_by_one",
+      "answers": [
+        [
+          "shared",
+          0.685
+        ],
+        [
+          "red",
+          0.68
+        ],
+        [
+          "mutable_defaults",
+          0.675
+        ]
+      ]
+    }
+  ],
+  "similarities": [
+    {
+      "pair": [
+        "anxiety",
+        "shame"
+      ],
+      "cosine": 0.855
+    },
+    {
+      "pair": [
+        "anxiety",
+        "confidence"
+      ],
+      "cosine": 0.49
+    },
+    {
+      "pair": [
+        "python",
+        "java"
+      ],
+      "cosine": 0.755
+    },
+    {
+      "pair": [
+        "python",
+        "anxiety"
+      ],
+      "cosine": 0.245
+    },
+    {
+      "pair": [
+        "off_by_one",
+        "range"
+      ],
+      "cosine": 0.437
+    },
+    {
+      "pair": [
+        "deadlock",
+        "thread"
+      ],
+      "cosine": 0.606
+    },
+    {
+      "pair": [
+        "copilot",
+        "chatbot"
+      ],
+      "cosine": 0.836
+    },
+    {
+      "pair": [
+        "interview",
+        "internship"
+      ],
+      "cosine": 0.68
+    }
+  ],
+  "cluster_quality": {
+    "silhouette_cosine": 0.512,
+    "mean_within_group_similarity": 0.729,
+    "mean_across_group_similarity": 0.377
+  }
+}
