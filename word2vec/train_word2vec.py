@@ -25,9 +25,12 @@ from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 import plotly.graph_objects as go
+from adjustText import adjust_text
+from mpl_toolkits.mplot3d import proj3d
 from gensim.models import Word2Vec
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
@@ -108,19 +111,36 @@ def style_axes(ax):
     ax.set_axisbelow(True)
 
 
+# White outline around labels so they stay readable over grid lines and dots.
+HALO = [pe.withStroke(linewidth=2.5, foreground="white")]
+LEADER = dict(arrowstyle="-", color="#94A3B8", lw=0.6, shrinkA=0, shrinkB=3)
+
+
+def place_labels(ax, xs, ys, words, objects, fontsize):
+    """Write one label per point, then nudge the labels apart so none overlap.
+
+    Labels that move away from their dot get a thin leader line back to it.
+    """
+    texts = [ax.text(x, y, pretty(w), fontsize=fontsize, color="#1E293B",
+                     zorder=5, path_effects=HALO)
+             for x, y, w in zip(xs, ys, words)]
+    adjust_text(texts, x=list(xs), y=list(ys), objects=objects, ax=ax,
+                expand=(1.15, 1.35), force_text=(0.3, 0.5), force_static=(0.2, 0.4),
+                force_pull=(0.005, 0.005), time_lim=10, arrowprops=LEADER)
+    return texts
+
+
 def scatter_2d(points, words, labels, title, subtitle, path, xlabel, ylabel):
     fig, ax = plt.subplots(figsize=(13, 9), dpi=150)
+    dots = []
     for group, color in COLORS.items():
         idx = [i for i, l in enumerate(labels) if l == group]
         if not idx:
             continue
-        ax.scatter(points[idx, 0], points[idx, 1], s=70, color=color,
-                   edgecolor="white", linewidth=1.2, label=group, zorder=3)
-        for i in idx:
-            ax.annotate(pretty(words[i]), (points[i, 0], points[i, 1]),
-                        xytext=(5, 4), textcoords="offset points",
-                        fontsize=8.5, color="#1E293B", zorder=4)
+        dots.append(ax.scatter(points[idx, 0], points[idx, 1], s=70, color=color,
+                               edgecolor="white", linewidth=1.2, label=group, zorder=3))
     style_axes(ax)
+    ax.margins(0.08)
     ax.set_xlabel(xlabel, color="#475569")
     ax.set_ylabel(ylabel, color="#475569")
     fig.suptitle(title, x=0.06, ha="left", fontsize=16, fontweight="bold", color="#0F172A")
@@ -128,6 +148,7 @@ def scatter_2d(points, words, labels, title, subtitle, path, xlabel, ylabel):
     ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1), frameon=False, fontsize=9,
               title="Topic group", title_fontsize=9)
     fig.tight_layout()
+    place_labels(ax, points[:, 0], points[:, 1], words, dots, fontsize=8.5)
     fig.savefig(path, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
@@ -142,9 +163,6 @@ def scatter_3d_png(points, words, labels, explained, path):
         ax.scatter(points[idx, 0], points[idx, 1], points[idx, 2], s=55,
                    color=color, edgecolor="white", linewidth=0.8, label=group,
                    depthshade=True)
-        for i in idx:
-            ax.text(points[i, 0], points[i, 1], points[i, 2], " " + pretty(words[i]),
-                    fontsize=7, color="#1E293B")
     ax.set_xlabel(f"PC1 ({explained[0]:.0%} of variance)", color="#475569", fontsize=9)
     ax.set_ylabel(f"PC2 ({explained[1]:.0%})", color="#475569", fontsize=9)
     ax.set_zlabel(f"PC3 ({explained[2]:.0%})", color="#475569", fontsize=9)
@@ -152,8 +170,24 @@ def scatter_3d_png(points, words, labels, explained, path):
     ax.view_init(elev=22, azim=-58)
     ax.set_title("Word2Vec embeddings in 3D (PCA)", fontsize=15, fontweight="bold",
                  color="#0F172A", loc="left")
-    ax.legend(loc="upper left", bbox_to_anchor=(1.02, 0.95), frameon=False, fontsize=9)
+    ax.legend(loc="upper left", bbox_to_anchor=(1.02, 0.95), frameon=False, fontsize=9,
+              title="Topic group", title_fontsize=9)
     fig.tight_layout()
+
+    # 3D text can't be de-overlapped directly, so project each point to its
+    # 2D position on the rendered image and place the labels on a transparent
+    # 2D layer drawn on top of the 3D axes.
+    fig.canvas.draw()
+    xs, ys, _ = proj3d.proj_transform(points[:, 0], points[:, 1], points[:, 2],
+                                      ax.get_proj())
+    disp = ax.transData.transform(np.column_stack([xs, ys]))
+    overlay = fig.add_axes(ax.get_position(), facecolor="none")
+    overlay.set_axis_off()
+    overlay.set_xlim(0, 1)
+    overlay.set_ylim(0, 1)
+    xy = overlay.transAxes.inverted().transform(disp)
+    dots = overlay.scatter(xy[:, 0], xy[:, 1], s=55, alpha=0)  # obstacles only
+    place_labels(overlay, xy[:, 0], xy[:, 1], words, [dots], fontsize=7.5)
     fig.savefig(path, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
