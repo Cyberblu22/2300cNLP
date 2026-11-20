@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Word2Vec Results — Linewise</title>
+  <meta name="description" content="A Word2Vec model trained on the Linewise subject (reading and debugging AI-generated code): training data, 2D and 3D embedding views, a similarity heatmap and what the model learned.">
+  <meta name="theme-color" content="#0F172A">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script>
+    // Same theme logic and storage key as the landing page, applied before first paint.
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem('linewise-theme'); } catch (e) {}
+      if (t !== 'light' && t !== 'dark') {
+        t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      }
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <style>
+    :root {
+      --midnight: #0F172A;
+      --cobalt: #2563EB;
+      --cyan: #06B6D4;
+      --emerald: #10B981;
+      --amber: #F59E0B;
+      --flare: #F97316;
+      --gradient: linear-gradient(135deg, #0F172A 0%, #1E3A8A 18%, #2563EB 34%, #06B6D4 50%, #10B981 66%, #F59E0B 84%, #F97316 100%);
+      --ink-bg: #0F172A;
+      --ink-bg-2: #0B1222;
+      --ink-line: #1E293B;
+      --ink-text: #F1F5F9;
+      --ink-muted: #94A3B8;
+      --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+      --font-serif: "DM Serif Display", Georgia, serif;
+      --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      --r-lg: 0.5rem;
+      --r-xl: 1rem;
+      --r-full: 9999px;
+    }
+    :root,
+    :root[data-theme="light"] {
+      --bg: #FFFFFF;
+      --bg-alt: #F1F5F9;
+      --surface: #FFFFFF;
+      --border: #E2E8F0;
+      --text: #1E293B;
+      --muted: #64748B;
+      --accent-text: #C2410C;
+      --link: #2563EB;
+      --bar-track: #E2E8F0;
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #0F172A;
+        --bg-alt: #111C33;
+        --surface: #16213A;
+        --border: #22304A;
+        --text: #F1F5F9;
+        --muted: #A5B4C8;
+        --accent-text: #FB923C;
+        --link: #60A5FA;
+        --bar-track: #22304A;
+        color-scheme: dark;
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #0F172A;
+      --bg-alt: #111C33;
+      --surface: #16213A;
+      --border: #22304A;
+      --text: #F1F5F9;
+      --muted: #A5B4C8;
+      --accent-text: #FB923C;
+      --link: #60A5FA;
+      --bar-track: #22304A;
+      color-scheme: dark;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 400 1rem/1.65 var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+    }
+    img { display: block; max-width: 100%; height: auto; }
+    a { color: var(--link); }
+    code, pre { font-family: var(--font-mono); }
+    :focus-visible {
+      outline: 2px solid var(--cyan);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    .skip-link {
+      position: absolute; left: 16px; top: -48px; z-index: 10;
+      padding: 10px 16px; background: var(--cobalt); color: #fff;
+      border-radius: var(--r-lg); font-weight: 600; text-decoration: none;
+    }
+    .skip-link:focus { top: 12px; }
+
+    .container { width: 100%; max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+    @media (min-width: 640px) { .container { padding: 0 24px; } }
+
+    /* Header + hero (always dark, like the landing page hero) */
+    .top {
+      position: relative;
+      background: var(--ink-bg);
+      color: var(--ink-text);
+      overflow: hidden;
+    }
+    .top::before {
+      content: "";
+      position: absolute;
+      inset: -40% -20% auto auto;
+      width: 70vw; height: 70vw; max-width: 760px; max-height: 760px;
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.28), rgba(6, 182, 212, 0.10) 40%, transparent 68%);
+      pointer-events: none;
+    }
+    .top::after {
+      content: "";
+      position: absolute; left: 0; right: 0; bottom: 0; height: 4px;
+      background: var(--gradient);
+    }
+    .bar {
+      position: relative; z-index: 1;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap;
+      padding-top: 18px; padding-bottom: 18px;
+    }
+    .logo {
+      display: inline-flex; align-items: center; gap: 10px;
+      color: inherit; text-decoration: none;
+      font-weight: 600; font-size: 1.0625rem; letter-spacing: -0.01em;
+    }
+    .logo__mark {
+      width: 24px; height: 24px; border-radius: 7px;
+      background: linear-gradient(135deg, #1E3A8A, #2563EB 30%, #06B6D4 55%, #10B981 72%, #F59E0B 88%, #F97316);
+    }
+    .bar__actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .back {
+      color: var(--ink-text); font-size: 0.875rem; font-weight: 500;
+      text-decoration: none; padding: 8px 4px;
+    }
+    .back:hover { color: var(--cyan); text-decoration: underline; }
+    .theme-toggle {
+      display: inline-flex; align-items: center; gap: 8px;
+      min-height: 36px; padding: 0 12px;
+      border-radius: var(--r-lg);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: transparent; color: var(--ink-text);
+      font: 500 0.8125rem var(--font-sans); cursor: pointer;
+    }
+    .theme-toggle:hover { border-color: var(--cyan); }
+    .theme-toggle__dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid currentColor; }
+    :root[data-theme="light"] .theme-toggle__dot { background: currentColor; }
+
+    .hero { position: relative; z-index: 1; padding-top: 40px; padding-bottom: 64px; }
+    .eyebrow {
+      display: inline-block;
+      font: 500 0.75rem/1 var(--font-mono);
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--cyan); margin-bottom: 16px;
+    }
+    h1, h2, h3 { font-family: var(--font-serif); font-weight: 400; letter-spacing: -0.01em; margin: 0; }
+    h1 { font-size: clamp(2rem, 5.2vw, 3.25rem); line-height: 1.1; max-width: 20ch; }
+    h1 em {
+      font-style: italic;
+      background: linear-gradient(90deg, #06B6D4, #10B981 45%, #F59E0B 80%, #F97316);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .lede { margin: 20px 0 0; max-width: 62ch; color: #CBD5E1; font-size: 1.0625rem; }
+    .lede + .lede { margin-top: 12px; }
+
+    /* Sections */
+    main section { padding: 56px 0; border-bottom: 1px solid var(--border); }
+    main section:nth-of-type(even) { background: var(--bg-alt); }
+    h2 { font-size: clamp(1.625rem, 3.6vw, 2.25rem); line-height: 1.15; margin-bottom: 12px; }
+    h3 { font-size: 1.375rem; line-height: 1.2; margin: 36px 0 10px; }
+    p { margin: 0 0 12px; max-width: 70ch; }
+    .muted { color: var(--muted); }
+    .note {
+      border-left: 3px solid var(--amber);
+      background: var(--surface);
+      border-radius: 0 var(--r-lg) var(--r-lg) 0;
+      padding: 12px 16px; margin: 16px 0; max-width: 70ch;
+    }
+    .note strong { color: var(--accent-text); }
+    code.w {
+      font-size: 0.875em; padding: 1px 6px;
+      border-radius: 4px; background: var(--bg-alt);
+      border: 1px solid var(--border);
+      overflow-wrap: anywhere;
+    }
+    main section:nth-of-type(even) code.w { background: var(--surface); }
+
+    /* Stat tiles */
+    .stats {
+      display: grid; gap: 12px; margin: 20px 0 8px;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
+    .stat {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-xl); padding: 14px 16px; min-width: 0;
+    }
+    .stat__num { font: 600 1.5rem/1.2 var(--font-sans); letter-spacing: -0.02em; }
+    .stat__label { font-size: 0.8125rem; color: var(--muted); margin-top: 4px; }
+
+    .params {
+      display: grid; gap: 8px; margin: 16px 0 0; padding: 0; list-style: none;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    }
+    .params li {
+      display: flex; flex-direction: column; gap: 2px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 10px 14px; min-width: 0;
+    }
+    .params code { font-size: 0.875rem; white-space: nowrap; }
+    .params span { color: var(--muted); font-size: 0.8125rem; }
+
+    /* Figures: images have white backgrounds, so they sit on white cards in both themes */
+    figure { margin: 24px 0 0; }
+    .card {
+      background: #FFFFFF; border: 1px solid var(--border);
+      border-radius: var(--r-xl); padding: 12px; overflow: hidden;
+    }
+    .card img { width: 100%; height: auto; margin: 0 auto; }
+    .card--narrow img { max-width: 760px; }
+    figcaption { margin-top: 12px; color: var(--muted); font-size: 0.9375rem; max-width: 75ch; }
+    figcaption strong { color: var(--text); }
+    .grid-2 { display: grid; gap: 24px; }
+    @media (min-width: 900px) { .grid-2 { grid-template-columns: 1fr 1fr; } }
+
+    .frame {
+      position: relative; width: 100%; height: 600px;
+      background: #FFFFFF; border: 1px solid var(--border);
+      border-radius: var(--r-xl); overflow: hidden; margin-top: 16px;
+    }
+    .frame iframe { display: block; width: 100%; height: 100%; border: 0; }
+    @media (max-width: 640px) { .frame { height: 460px; } }
+    .hint {
+      display: inline-flex; flex-wrap: wrap; gap: 6px 14px;
+      font: 500 0.8125rem var(--font-mono); color: var(--muted); margin-top: 8px;
+    }
+    .hint span::before { content: "\2192\00a0"; color: var(--cyan); }
+
+    /* Tables */
+    .table-wrap {
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+      border: 1px solid var(--border); border-radius: var(--r-xl);
+      background: var(--surface); margin-top: 16px;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+    caption { text-align: left; padding: 12px 16px 0; color: var(--muted); font-size: 0.875rem; }
+    th, td { text-align: left; padding: 10px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
+    thead th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+    tbody th { font: 600 0.875rem var(--font-mono); white-space: nowrap; }
+    .nbrs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+    .nbrs li {
+      font: 400 0.8125rem/1.4 var(--font-mono);
+      padding: 3px 9px; border-radius: var(--r-full);
+      border: 1px solid var(--border); background: var(--bg);
+      white-space: nowrap;
+    }
+    .nbrs li b { font-weight: 500; color: var(--muted); margin-left: 4px; }
+
+    /* Analogies */
+    .analogies { display: grid; gap: 12px; margin: 16px 0 0; padding: 0; list-style: none; }
+    .analogy {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-xl); padding: 14px 16px;
+    }
+    .analogy--weak { border-color: var(--amber); }
+    .analogy__eq { font: 500 0.9375rem/1.6 var(--font-mono); overflow-wrap: anywhere; }
+    .analogy__eq .q { color: var(--accent-text); font-weight: 700; }
+    .analogy__ans { margin: 8px 0 0; font-size: 0.875rem; color: var(--muted); }
+    .analogy__ans code { color: var(--text); }
+    .tag {
+      display: inline-block; margin-left: 6px;
+      font: 600 0.6875rem/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 4px 8px; border-radius: var(--r-full); vertical-align: 2px;
+    }
+    .tag--ok { background: rgba(16, 185, 129, 0.15); color: #047857; }
+    .tag--weak { background: rgba(245, 158, 11, 0.18); color: #B45309; }
+    :root[data-theme="dark"] .tag--ok { color: #34D399; }
+    :root[data-theme="dark"] .tag--weak { color: #FBBF24; }
+
+    /* Pair similarity bars */
+    .pairs { display: grid; gap: 10px; margin: 16px 0 0; padding: 0; list-style: none; max-width: 720px; }
+    .pair { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: baseline; }
+    .pair__words { font: 400 0.875rem var(--font-mono); overflow-wrap: anywhere; }
+    .pair__val { font: 600 0.875rem var(--font-mono); }
+    .pair__bar { grid-column: 1 / -1; height: 8px; border-radius: var(--r-full); background: var(--bar-track); overflow: hidden; }
+    .pair__bar span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #2563EB, #06B6D4); }
+
+    /* Cluster quality */
+    .quality { display: grid; gap: 12px; margin: 16px 0 0; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .quality .stat p { margin: 8px 0 0; font-size: 0.875rem; color: var(--muted); }
+
+    /* Code block */
+    pre {
+      margin: 16px 0 0; padding: 18px 20px;
+      background: var(--ink-bg-2); color: var(--ink-text);
+      border: 1px solid var(--ink-line); border-radius: var(--r-xl);
+      overflow-x: auto; font-size: 0.875rem; line-height: 1.7; max-width: 720px;
+    }
+    pre .c { color: var(--ink-muted); }
+    pre .p { color: var(--emerald); user-select: none; }
+
+    .footer { background: var(--ink-bg); color: var(--ink-muted); padding: 32px 0; font-size: 0.875rem; }
+    .footer a { color: var(--ink-text); }
+    .footer p { margin: 0; }
+    .footer p + p { margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <div class="top">
+    <header class="container bar">
+      <a href="../index.html" class="logo" aria-label="Linewise home">
+        <span class="logo__mark" aria-hidden="true"></span>
+        <span>Linewise</span>
+      </a>
+      <div class="bar__actions">
+        <a class="back" href="../index.html">&larr; Back to the landing page</a>
+        <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch color theme">
+          <span class="theme-toggle__dot" aria-hidden="true"></span>
+          <span data-theme-label>Light</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="container hero">
+      <span class="eyebrow">Intro to NLP &middot; Word embeddings</span>
+      <h1>Word2Vec: how the words around <em>AI code reading</em> relate</h1>
+      <p class="lede">Word2Vec turns every word into a list of 100 numbers (a vector). It learns those numbers by looking at which words appear near each other, so words that are used in similar contexts end up with similar vectors, and you can measure how related two words are by comparing them.</p>
+      <p class="lede">This model was trained on the Linewise subject: daily practice in reading, reviewing and debugging AI-generated code. Below are the training data, pictures of the vectors, and what the model actually learned.</p>
+    </div>
+  </div>
+
+  <main id="main">
+    <!-- 3. Training data -->
+    <section aria-labelledby="data-title">
+      <div class="container">
+        <h2 id="data-title">The training data</h2>
+        <p>The corpus has two parts:</p>
+        <p><strong>1. The real course document.</strong> The Linewise NLP prompt chain (avatar research, diary entries, brand system and product requirements), split into 618 sentences. It is only about 8,000 words, which is too little to train stable vectors on its own, so it is repeated 3 times to give it more weight.</p>
+        <p><strong>2. 5,040 template-generated sentences</strong> about the same subject: bug types, code constructs, review actions, programming languages, AI tools, practice habits, feelings and careers.</p>
+        <div class="note">
+          <p><strong>Honesty note:</strong> the generated sentences are synthetic. They are not real user data. Each template drops words from one topic group into the same kinds of sentences, so words in a group are used in similar contexts by design. That is why the topic clusters in the graphs below are so clean: the model is partly recovering the groups the templates put in.</p>
+        </div>
+        <p class="muted">Multi-word terms are joined with underscores so the model treats them as one token, for example <code class="w">off by one</code> &rarr; <code class="w">off_by_one</code> and <code class="w">C++</code> &rarr; <code class="w">cpp</code>.</p>
+
+        <h3>Corpus stats</h3>
+        <div class="stats">
+          <div class="stat"><div class="stat__num">618</div><div class="stat__label">course sentences (&times;3)</div></div>
+          <div class="stat"><div class="stat__num">5,040</div><div class="stat__label">generated sentences</div></div>
+          <div class="stat"><div class="stat__num">6,894</div><div class="stat__label">total sentences</div></div>
+          <div class="stat"><div class="stat__num">61,623</div><div class="stat__label">total tokens</div></div>
+          <div class="stat"><div class="stat__num">1,943</div><div class="stat__label">vocabulary size</div></div>
+        </div>
+
+        <h3>Training parameters</h3>
+        <p class="muted">Trained with gensim&rsquo;s Word2Vec.</p>
+        <ul class="params">
+          <li><code>vector_size = 100</code><span>numbers per word</span></li>
+          <li><code>window = 5</code><span>context words on each side</span></li>
+          <li><code>min_count = 3</code><span>drop rarer words</span></li>
+          <li><code>sg = 1</code><span>skip-gram</span></li>
+          <li><code>negative = 10</code><span>negative samples</span></li>
+          <li><code>epochs = 40</code><span>passes over the corpus</span></li>
+          <li><code>seed = 42</code><span>for reproducibility</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 4. 2D views -->
+    <section aria-labelledby="views2d-title">
+      <div class="container">
+        <h2 id="views2d-title">2D views</h2>
+        <p>Each vector has 100 dimensions, so to draw it we squash it down to two. Both plots show the same 81 topic words, colored by the topic group they came from.</p>
+        <div class="grid-2">
+          <figure>
+            <div class="card">
+              <img src="outputs/pca_2d.png" width="1935" height="1330" loading="lazy"
+                   alt="Scatter plot of 81 topic words after PCA to two dimensions, colored by topic group. Words from the same group, such as bug types, languages and feelings, sit near each other.">
+            </div>
+            <figcaption><strong>PCA</strong> is a linear projection: it finds the two directions along which the vectors spread out the most and plots each word on them. The x-axis keeps 12.8% of the variance and the y-axis 9.2%, so this view shows only about 22% of the information. Overlapping groups here may still be separate in the full 100 dimensions.</figcaption>
+          </figure>
+          <figure>
+            <div class="card">
+              <img src="outputs/tsne_2d.png" width="1935" height="1330" loading="lazy"
+                   alt="Scatter plot of the same 81 topic words after t-SNE, showing tight, well-separated clusters for each topic group.">
+            </div>
+            <figcaption><strong>t-SNE</strong> is non-linear: it tries to keep each word next to its nearest neighbors from the 100-dimensional space. Read it for <em>which words group together</em>. The distance between two clusters, and the size of a cluster, are not meaningful, and the axes have no units.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. 3D views -->
+    <section aria-labelledby="views3d-title">
+      <div class="container">
+        <h2 id="views3d-title">3D views</h2>
+        <p>The same PCA projection with a third axis (8.7% more variance, about 30.7% in total). The interactive version needs JavaScript and loads Plotly from a CDN.</p>
+        <p class="hint" aria-label="How to use the 3D plot"><span>drag to rotate</span><span>scroll to zoom</span><span>hover for words</span></p>
+        <div class="frame">
+          <iframe src="outputs/embedding_3d.html" title="Interactive 3D PCA plot of the Word2Vec topic word vectors" loading="lazy"></iframe>
+        </div>
+        <p class="muted" style="margin-top:8px;font-size:0.875rem;">Plot not showing? <a href="outputs/embedding_3d.html">Open the interactive 3D plot on its own page</a>.</p>
+
+        <figure>
+          <div class="card card--narrow">
+            <img src="outputs/pca_3d.png" width="1714" height="1485" loading="lazy"
+                 alt="Static 3D scatter plot of the topic words on the first three PCA components, colored by topic group.">
+          </div>
+          <figcaption><strong>Static version.</strong> One fixed angle of the 3D PCA plot above. Axes: PC1 12.8%, PC2 9.2%, PC3 8.7% of the variance.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 6. Heatmap -->
+    <section aria-labelledby="heatmap-title">
+      <div class="container">
+        <h2 id="heatmap-title">Similarity heatmap</h2>
+        <figure>
+          <div class="card card--narrow">
+            <img src="outputs/similarity_heatmap.png" width="1541" height="1410" loading="lazy"
+                 alt="Grid of cosine similarities between 18 words, two from each topic group. Darker blue squares appear in pairs along the diagonal, showing that words from the same group are more similar to each other.">
+          </div>
+          <figcaption>Cosine similarity between 18 hand-picked words: four bug types plus two words from each other topic (for example <code class="w">python</code> and <code class="w">javascript</code>, <code class="w">anxiety</code> and <code class="w">shame</code>). 1.0 means the vectors point the same way; values near 0 mean unrelated. The darker blocks along the diagonal are words from the same topic; lighter squares elsewhere are words from different topics.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 7. What the model learned -->
+    <section aria-labelledby="learned-title">
+      <div class="container">
+        <h2 id="learned-title">What the model learned</h2>
+        <p>All numbers are cosine similarities between word vectors (higher means more similar), copied from <code class="w">outputs/results.json</code>.</p>
+
+        <h3>Nearest neighbors</h3>
+        <p class="muted">The six words whose vectors are closest to each probe word.</p>
+        <div class="table-wrap" role="region" aria-labelledby="nn-cap" tabindex="0">
+          <table>
+            <caption id="nn-cap">Top 6 nearest neighbors per word, with cosine similarity</caption>
+            <thead><tr><th scope="col">Word</th><th scope="col">Nearest neighbors</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">off_by_one</th><td><ul class="nbrs"><li>race_condition<b>0.758</b></li><li>deadlock<b>0.754</b></li><li>null_pointer<b>0.75</b></li><li>mutable_default<b>0.746</b></li><li>infinite_loop<b>0.744</b></li><li>normalization<b>0.721</b></li></ul></td></tr>
+              <tr><th scope="row">mutable_default</th><td><ul class="nbrs"><li>race_condition<b>0.842</b></li><li>memory_leak<b>0.838</b></li><li>infinite_loop<b>0.82</b></li><li>normalization<b>0.804</b></li><li>type_error<b>0.801</b></li><li>null_pointer<b>0.798</b></li></ul></td></tr>
+              <tr><th scope="row">race_condition</th><td><ul class="nbrs"><li>deadlock<b>0.907</b></li><li>null_pointer<b>0.897</b></li><li>memory_leak<b>0.878</b></li><li>type_error<b>0.87</b></li><li>infinite_loop<b>0.865</b></li><li>overflow<b>0.856</b></li></ul></td></tr>
+              <tr><th scope="row">python</th><td><ul class="nbrs"><li>rust<b>0.766</b></li><li>javascript<b>0.764</b></li><li>cpp<b>0.755</b></li><li>java<b>0.755</b></li><li>typescript<b>0.73</b></li><li>clickable<b>0.58</b></li></ul></td></tr>
+              <tr><th scope="row">copilot</th><td><ul class="nbrs"><li>autocomplete<b>0.938</b></li><li>llm<b>0.908</b></li><li>hallucinated<b>0.866</b></li><li>chatbot<b>0.836</b></li><li>prompt<b>0.818</b></li><li>assistant<b>0.812</b></li></ul></td></tr>
+              <tr><th scope="row">debug</th><td><ul class="nbrs"><li>inspect<b>0.791</b></li><li>review<b>0.772</b></li><li>verify<b>0.747</b></li><li>trace<b>0.735</b></li><li>flag<b>0.734</b></li><li>spot<b>0.724</b></li></ul></td></tr>
+              <tr><th scope="row">anxiety</th><td><ul class="nbrs"><li>doubt<b>0.909</b></li><li>panic<b>0.877</b></li><li>stress<b>0.872</b></li><li>fear<b>0.859</b></li><li>shame<b>0.855</b></li><li>overwhelm<b>0.825</b></li></ul></td></tr>
+              <tr><th scope="row">confidence</th><td><ul class="nbrs"><li>relief<b>0.83</b></li><li>pride<b>0.814</b></li><li>calm<b>0.806</b></li><li>joy<b>0.802</b></li><li>earned<b>0.677</b></li><li>clarity<b>0.661</b></li></ul></td></tr>
+              <tr><th scope="row">interview</th><td><ul class="nbrs"><li>internship<b>0.68</b></li><li>resume<b>0.648</b></li><li>recruiter<b>0.637</b></li><li>summer<b>0.586</b></li><li>career<b>0.581</b></li><li>hiring<b>0.576</b></li></ul></td></tr>
+              <tr><th scope="row">streak</th><td><ul class="nbrs"><li>hint<b>0.633</b></li><li>progress<b>0.605</b></li><li>feedback<b>0.601</b></li><li>lesson<b>0.599</b></li><li>calendar<b>0.597</b></li><li>bars<b>0.581</b></li></ul></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="muted" style="margin-top:12px;">Every probe word&rsquo;s neighbors come from its own topic group, with a few leaks from the course document (<code class="w">clickable</code> for python, <code class="w">calendar</code> and <code class="w">bars</code> for streak).</p>
+
+        <h3>Analogies</h3>
+        <p class="muted">&ldquo;a is to b as c is to ?&rdquo; is answered with the vector <code class="w">b &minus; a + c</code> and the closest words to it.</p>
+        <ul class="analogies">
+          <li class="analogy">
+            <div class="analogy__eq">shame : pride :: anxiety : <span class="q">joy</span><span class="tag tag--ok">Sensible</span></div>
+            <p class="analogy__ans">Top 3: <code>joy</code> 0.826, <code>relief</code> 0.814, <code>calm</code> 0.764. Swapping a negative feeling for a positive one works.</p>
+          </li>
+          <li class="analogy">
+            <div class="analogy__eq">python : javascript :: java : <span class="q">cpp</span><span class="tag tag--ok">Sensible</span></div>
+            <p class="analogy__ans">Top 3: <code>cpp</code> 0.784, <code>typescript</code> 0.754, <code>rust</code> 0.746. The answer is another language, though there is no single &ldquo;right&rdquo; answer here.</p>
+          </li>
+          <li class="analogy analogy--weak">
+            <div class="analogy__eq">deadlock : thread :: off_by_one : <span class="q">shared</span><span class="tag tag--weak">Weak</span></div>
+            <p class="analogy__ans">Top 3: <code>shared</code> 0.685, <code>red</code> 0.68, <code>mutable_defaults</code> 0.675.</p>
+          </li>
+        </ul>
+        <div class="note">
+          <p><strong>Why the third one fails:</strong> we hoped for something like <code class="w">index</code> or <code class="w">range</code> (the thing an off-by-one bug is about, the way a deadlock is about threads). Instead the answers are a detail word from other bugs (<code class="w">shared</code>), an unrelated word (<code class="w">red</code>) and a plural spelling of another bug. The corpus is small and mostly templated, and all bug types share the same sentence templates, so their vectors are very close together. There is not enough varied text for a consistent &ldquo;bug &rarr; what it involves&rdquo; direction to form, so the arithmetic lands in a noisy spot.</p>
+        </div>
+
+        <h3>Pair similarities</h3>
+        <ul class="pairs">
+          <li class="pair"><span class="pair__words">anxiety &middot; shame</span><span class="pair__val">0.855</span><span class="pair__bar" aria-hidden="true"><span style="width:85.5%"></span></span></li>
+          <li class="pair"><span class="pair__words">anxiety &middot; confidence</span><span class="pair__val">0.49</span><span class="pair__bar" aria-hidden="true"><span style="width:49%"></span></span></li>
+          <li class="pair"><span class="pair__words">python &middot; java</span><span class="pair__val">0.755</span><span class="pair__bar" aria-hidden="true"><span style="width:75.5%"></span></span></li>
+          <li class="pair"><span class="pair__words">python &middot; anxiety</span><span class="pair__val">0.245</span><span class="pair__bar" aria-hidden="true"><span style="width:24.5%"></span></span></li>
+          <li class="pair"><span class="pair__words">off_by_one &middot; range</span><span class="pair__val">0.437</span><span class="pair__bar" aria-hidden="true"><span style="width:43.7%"></span></span></li>
+          <li class="pair"><span class="pair__words">deadlock &middot; thread</span><span class="pair__val">0.606</span><span class="pair__bar" aria-hidden="true"><span style="width:60.6%"></span></span></li>
+          <li class="pair"><span class="pair__words">copilot &middot; chatbot</span><span class="pair__val">0.836</span><span class="pair__bar" aria-hidden="true"><span style="width:83.6%"></span></span></li>
+          <li class="pair"><span class="pair__words">interview &middot; internship</span><span class="pair__val">0.68</span><span class="pair__bar" aria-hidden="true"><span style="width:68%"></span></span></li>
+        </ul>
+        <p class="muted" style="margin-top:12px;">Words from the same topic score high (anxiety &middot; shame), opposite feelings score lower (anxiety &middot; confidence), and words from unrelated topics score lowest (python &middot; anxiety).</p>
+
+        <h3>Cluster quality</h3>
+        <p class="muted">How cleanly the 81 topic words separate into their 9 groups, measured in the full 100-dimensional space.</p>
+        <div class="quality">
+          <div class="stat">
+            <div class="stat__num">0.512</div>
+            <div class="stat__label">silhouette score (cosine)</div>
+            <p>Ranges from &minus;1 to 1; 0.512 means words sit clearly closer to their own group than to the nearest other group.</p>
+          </div>
+          <div class="stat">
+            <div class="stat__num">0.729</div>
+            <div class="stat__label">mean similarity within a group</div>
+            <p>On average, two words from the same topic have a cosine similarity of 0.729.</p>
+          </div>
+          <div class="stat">
+            <div class="stat__num">0.377</div>
+            <div class="stat__label">mean similarity across groups</div>
+            <p>Two words from different topics average only 0.377, about half the within-group value.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. Run it yourself -->
+    <section aria-labelledby="run-title">
+      <div class="container">
+        <h2 id="run-title">Run it yourself</h2>
+        <p>From the <code class="w">word2vec/</code> folder. Building the corpus writes <code class="w">data/corpus.txt</code>; training writes the model, these graphs and <code class="w">outputs/results.json</code>.</p>
+<pre><code><span class="p">$ </span>pip install -r requirements.txt
+<span class="p">$ </span>python build_corpus.py
+<span class="p">$ </span>python train_word2vec.py</code></pre>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>Linewise is a concept created for a class exercise. It is not a real product.</p>
+      <p><a href="../index.html">Back to the landing page</a></p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var btn = document.querySelector('[data-theme-toggle]');
+      var label = document.querySelector('[data-theme-label]');
+      if (!btn || !label) return;
+      function sync() {
+        var current = root.getAttribute('data-theme');
+        label.textContent = current === 'dark' ? 'Light' : 'Dark';
+        btn.setAttribute('aria-label', 'Switch to ' + (current === 'dark' ? 'light' : 'dark') + ' theme');
+      }
+      btn.addEventListener('click', function () {
+        var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', next);
+        try { localStorage.setItem('linewise-theme', next); } catch (e) {}
+        sync();
+      });
+      sync();
+    })();
+  </script>
+</body>
+</html>

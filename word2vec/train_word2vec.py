@@ -116,7 +116,7 @@ HALO = [pe.withStroke(linewidth=2.5, foreground="white")]
 LEADER = dict(arrowstyle="-", color="#94A3B8", lw=0.6, shrinkA=0, shrinkB=3)
 
 
-def place_labels(ax, xs, ys, words, objects, fontsize):
+def place_labels(ax, xs, ys, words, fontsize):
     """Write one label per point, then nudge the labels apart so none overlap.
 
     Labels that move away from their dot get a thin leader line back to it.
@@ -124,7 +124,7 @@ def place_labels(ax, xs, ys, words, objects, fontsize):
     texts = [ax.text(x, y, pretty(w), fontsize=fontsize, color="#1E293B",
                      zorder=5, path_effects=HALO)
              for x, y, w in zip(xs, ys, words)]
-    adjust_text(texts, x=list(xs), y=list(ys), objects=objects, ax=ax,
+    adjust_text(texts, x=list(xs), y=list(ys), ax=ax,
                 expand=(1.15, 1.35), force_text=(0.3, 0.5), force_static=(0.2, 0.4),
                 force_pull=(0.005, 0.005), time_lim=10, arrowprops=LEADER)
     return texts
@@ -132,13 +132,12 @@ def place_labels(ax, xs, ys, words, objects, fontsize):
 
 def scatter_2d(points, words, labels, title, subtitle, path, xlabel, ylabel):
     fig, ax = plt.subplots(figsize=(13, 9), dpi=150)
-    dots = []
     for group, color in COLORS.items():
         idx = [i for i, l in enumerate(labels) if l == group]
         if not idx:
             continue
-        dots.append(ax.scatter(points[idx, 0], points[idx, 1], s=70, color=color,
-                               edgecolor="white", linewidth=1.2, label=group, zorder=3))
+        ax.scatter(points[idx, 0], points[idx, 1], s=70, color=color,
+                   edgecolor="white", linewidth=1.2, label=group, zorder=3)
     style_axes(ax)
     ax.margins(0.08)
     ax.set_xlabel(xlabel, color="#475569")
@@ -148,7 +147,7 @@ def scatter_2d(points, words, labels, title, subtitle, path, xlabel, ylabel):
     ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1), frameon=False, fontsize=9,
               title="Topic group", title_fontsize=9)
     fig.tight_layout()
-    place_labels(ax, points[:, 0], points[:, 1], words, dots, fontsize=8.5)
+    place_labels(ax, points[:, 0], points[:, 1], words, fontsize=8.5)
     fig.savefig(path, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
@@ -186,8 +185,7 @@ def scatter_3d_png(points, words, labels, explained, path):
     overlay.set_xlim(0, 1)
     overlay.set_ylim(0, 1)
     xy = overlay.transAxes.inverted().transform(disp)
-    dots = overlay.scatter(xy[:, 0], xy[:, 1], s=55, alpha=0)  # obstacles only
-    place_labels(overlay, xy[:, 0], xy[:, 1], words, [dots], fontsize=7.5)
+    place_labels(overlay, xy[:, 0], xy[:, 1], words, fontsize=7.5)
     fig.savefig(path, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
